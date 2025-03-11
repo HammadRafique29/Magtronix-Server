@@ -34,6 +34,7 @@ class OllamaManager:
                 stderr=logfile,  # Redirect error output to log file
                 cwd=os.getcwd(),  # Use the current directory
                 env=os.environ,  # Pass environment variables
+                encoding="utf-8",
                 creationflags=subprocess.CREATE_NO_WINDOW  # Hide console window (Windows only)
             ) 
             
@@ -178,9 +179,7 @@ class OpenWebUIManager:
         print("#### Destructor: OpenWeb-UI")
         if self.RUNNING_CONTAINERS:
             for key, cont in self.RUNNING_CONTAINERS.items():
-                print(" --Stoping: open-WebUI")
-                if cont['container'] or cont['isRunning']:
-                    self.stop_container()
+                self.stop_container()
                 self.RUNNING_CONTAINERS = {}
         else: self.stop_container()
 
@@ -209,24 +208,21 @@ class OpenWebUIManager:
 
     def stop_container(self):
 
-        if not self.is_running() and not self.RUNNING_CONTAINERS.get(self.task_id, None) and not self.running_process:
-            print(f"Container '{self.container_name}' is not running.")
-            return
+        if not self.is_running() or not self.running_process: return
         
-        stop_command = ["docker", "stop", self.container_name]
-        rm_command = ["docker", "rm", self.container_name]
-        try:
-            subprocess.run(stop_command, capture_output=True, text=True, check=True)
-            subprocess.run(rm_command, capture_output=True, text=True, check=True)
-            print("Container stopped and removed successfully.")
-        except Exception as e: print(f"Error stopping container: {e.stderr}")
+        # stop_command = ["docker", "stop", self.container_name]
+        # rm_command = ["docker", "rm", self.container_name]
+        # try:
+        #     subprocess.run(stop_command, capture_output=True, text=True, check=True)
+        #     subprocess.run(rm_command, capture_output=True, text=True, check=True)
+        #     print("Container stopped and removed successfully.")
+        # except Exception as e: print(f"Error stopping container: {e.stderr}")
 
         try:
             result = subprocess.run(["tasklist"], capture_output=True, text=True)
             for line in result.stdout.splitlines():
                 if "open-webui.exe" in line:
                     pid = int(line.split()[1])  # Extract PID
-                    print(f"Stopping open-webui.exe with PID {pid}")
                     os.system(f"taskkill /F /PID {pid}")  # Force kill the process
         except: pass
 
@@ -240,7 +236,7 @@ class OpenWebUIManager:
     def delete_container_data(self, task_id):
         cont_data = self.RUNNING_CONTAINERS.get(task_id)
         if cont_data:
-            if cont_data['container'] or cont_data['isRunning']:
+            if cont_data['isRunning']:
                 self.stop_container()
                 for dirs in self.RUNNING_CONTAINERS[task_id]['files']:
                     local_path = dirs['local_path']
@@ -252,10 +248,15 @@ class OpenWebUIManager:
 
 
     def run_process(command, cwd, shell=True):
-        print(command, cwd)
-        process = subprocess.Popen(command, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=shell)
+        process = subprocess.Popen(
+            command, 
+            cwd=cwd, 
+            stdout=subprocess.PIPE, 
+            stderr=subprocess.PIPE, 
+            shell=shell, 
+            encoding="utf-8"
+        )
         stdout, stderr = process.communicate()  # Wait for process to finish and capture output
-        print("STDOUT:", stdout.decode().strip())
 
 
     # Function to start open-webui.exe and save logs
@@ -268,6 +269,7 @@ class OpenWebUIManager:
                 stderr=logfile,  # Redirect error output to log file
                 cwd=os.getcwd(),  # Use the current directory
                 env=os.environ,  # Pass environment variables
+                encoding="utf-8",
                 creationflags=subprocess.CREATE_NO_WINDOW  # Hide console window (Windows only)
             ) 
     

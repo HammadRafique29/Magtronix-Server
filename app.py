@@ -108,8 +108,6 @@ for feature_name, feature_data in config["features"].items():
     LOADED_FEATURES[feature_name] = {"class" : getattr(module, class_name), "instance": None}  # Store class reference
     LOADED_FEATURES[feature_name]['instance'] = LOADED_FEATURES[feature_name]['class'](**DYNAMIC_OBJ_PARAMETERS)
     if hasattr(LOADED_FEATURES[feature_name]['instance'], "installation"):
-        # clear_screen()
-        print(f"-- Installing '{feature_name} packages...'")
         getattr(LOADED_FEATURES[feature_name]['instance'], "installation")()
 
     print(f"Loaded: {feature_name} -> Class: {class_name}")

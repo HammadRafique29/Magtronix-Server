@@ -187,7 +187,6 @@ class QUIZOMATIC:
 
     def installation(self):
         try:
-            print("INSTALLING PACKAGES")
             self.check_and_install_remotion_dependencies()
             self.add_ffmpeg_path()
         except Exception as e:
@@ -259,9 +258,7 @@ class QUIZOMATIC:
             current_path = os.environ.get("PATH", "")
  
             for p in current_path.split(";"):
-                if ("ffmpeg/bin" in p or "ffmpeg\\bin" in p):
-                    print(f"{GRCLR}-- FFmpeg Path Already Set.{RSCLR}")
-                    return
+                if ("ffmpeg/bin" in p or "ffmpeg\\bin" in p): return
             
             raise Exception(f"   {RDCLR}Ffmpeg not found. Download and ADD_TO_PATH{RSCLR}")
 
@@ -280,8 +277,9 @@ class QUIZOMATIC:
         except FileNotFoundError: raise Exception("Error: npm is not installed. Please install npm first")
         if not os.path.exists(os.path.join(CUR_DIR, "package.json")): raise Exception("Error: package.json file not found in the current directory.")
         try:
-            print(f"{GRCLR}-- Quizomatic: Installing dependencies from package.json...{RSCLR}")
-            if not os.path.exists(NODE_MODULE_DIR): subprocess.run(["npm", "install", "--loglevel=error"],  cwd=CUR_DIR, check=True, shell=True if systemName == "Windows" else False)
+            if not os.path.exists(NODE_MODULE_DIR): 
+                print(f"{GRCLR}-- Quizomatic: Installing dependencies from package.json...{RSCLR}")
+                subprocess.run(["npm", "install", "--loglevel=error"],  cwd=CUR_DIR, check=True, shell=True if systemName == "Windows" else False)
         except subprocess.CalledProcessError as e: raise Exception("Error: Failed to install dependencies.")
 
 
@@ -357,7 +355,15 @@ class QUIZOMATIC:
         # if systemName == "Windows": outputFile = os.path.join("output", os.path.basename(outputFile))
         temp = None
         command = ["npm", "run", "py_render_win" if systemName == "Windows" else "py_render_linux", "--composition=videoGenerator", f"--output={outputFile}"]
-        process = subprocess.Popen(command, cwd=CUR_DIR, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell=True if systemName == "Windows" else False)
+        process = subprocess.Popen(
+            command, 
+            cwd=CUR_DIR, 
+            stdout=subprocess.PIPE, 
+            stderr=subprocess.PIPE,
+            encoding="utf-8", 
+            text=True, 
+            shell=True if systemName == "Windows" else False
+        )
         for line in process.stdout:
             if "Rendered" in line:
                 parts = line.strip().split(",")

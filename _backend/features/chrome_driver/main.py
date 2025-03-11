@@ -59,14 +59,14 @@ def start_chrome_driver():
     venv_dir = os.path.join(os.getcwd(), 'venv')
     
     if not os.path.exists(venv_dir):
-        print("❌ Virtual environment 'venv' not found. Please create and activate it.")
+        print("ChromeDriver: Virtual environment 'venv' not found. Please create and activate it.")
         return None 
 
     bin_dir = os.path.join(venv_dir, 'Scripts' if os.name == 'nt' else 'bin')
     try:
         python_executable = next(os.path.join(bin_dir, file) for file in os.listdir(bin_dir) if 'python' in file.lower())
     except StopIteration:
-        print("❌ No Python executable found in the virtual environment.")
+        print("ChromeDriver: No Python executable found in the virtual environment.")
         return None
 
     chrome_driver_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'chrome_driver.py')
@@ -75,9 +75,10 @@ def start_chrome_driver():
         [python_executable, chrome_driver_path],
         stdout=subprocess.PIPE, 
         stderr=subprocess.PIPE,
+        encoding="utf-8",
         text=True 
     )
-    print(f"✅ Started chrome_driver.py (PID: {process.pid})")
+    print(f"Started chrome_driver.py (PID: {process.pid})")
     return process
 
 

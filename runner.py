@@ -145,7 +145,8 @@ def start_ollama():
             ["ollama", "serve"], 
             shell=True, 
             stdout=subprocess.DEVNULL,  # Suppress standard output
-            stderr=subprocess.DEVNULL
+            stderr=subprocess.DEVNULL,
+            encoding="utf-8"
         ).wait()
     except: pass
 
@@ -158,7 +159,8 @@ def start_docker_windows():
             ["net", "start", "Docker Desktop Service"],
             shell=True,
             stdout=subprocess.DEVNULL,  # Suppress standard output
-            stderr=subprocess.DEVNULL   # Suppress standard error
+            stderr=subprocess.DEVNULL,   # Suppress standard error
+            encoding="utf-8"
         )
     except subprocess.CalledProcessError as e: pass
 

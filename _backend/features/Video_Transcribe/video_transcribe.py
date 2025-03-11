@@ -25,6 +25,13 @@ class VIDEO_TRANSCRIBE_:
         ]
         self.TEMP_AUDIO_DIR = tempfile.mkdtemp()
 
+        self.RUNNING_TASKS = []
+
+
+    def clear_resouces(self):
+        self.RUNNING_TASKS = []
+
+
 
     def create_file_download_link(self, filePath):
         response = requests.post(self.API_ENDPOINTS['generate_download_link'], json={"file_path": filePath})
