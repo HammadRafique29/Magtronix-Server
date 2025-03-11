@@ -1,0 +1,5 @@
+openpyxl
+moviepy==1.0.3
+colorama
+pydub
+requests

@@ -1,0 +1,177 @@
+{
+    "features": {
+        "Ollama": {
+            "name": "Ollama - AI Chatbot",
+            "icon": "ollama_feature.png",
+            "module": "_backend.features.AI.ollama_model.ollama_",
+            "class": "OllamaManager",
+            "methods": {
+                "download_model": { "args": {"model_name": "[input][str] Model name..."}, "kwargs": { "Ollama Models": "[a][https://ollama.com/search] View Ollama Models" }, "desc": "Ollama - Download Model" },
+                "ollama_chat":    { "args": {"model_name": "get_installed_models", "prompt": "[input][str] Ask anything from AI..."}, "kwargs": { "context": "[input][str] Custom System Prompt [OPTIONAL]..." }, "desc": "Ollama - AI Chat" },
+                "summarize_text": { "args": {"model_name": "get_installed_models", "prompt": "[input][str] Ask anything from AI..."}, "kwargs": { "words_count": "[input][str] Words Limit [OPTIONAL]..." }, "desc": "Ollama - Summarize Content" },
+                "default": {
+                    "module": "ollama_chat",
+                    "args": {"model_name": "get_installed_models", "prompt": "[input][str] Ask anything from AI..."}, 
+                    "kwargs": { "context": "[input][str] Enter system context...", "WebUI": "[a][http://localhost:8080] Open in Browser" },
+                    "desc": "Ollama - AI Chatbot"
+                }
+            },
+            "operations": {
+                "logs":   {"type":"logs", "module":"get_logs", "args": {"task_id":null}},
+                "files":  {"type":"files", "module":"get_files", "args": {"task_id":null}},
+                "delete": {"type":"btn", "module":"delete_task", "args": {"task_id":null}}
+            }
+        },
+        "Quizomatic": {
+            "module": "_backend.features.Quizomatic.video_generator",
+            "name": "Quizomatic - Generate Quiz Videos",
+            "icon": "quizomatic.jpg",
+            "class": "QUIZOMATIC",
+            "methods": {
+                "generate_video": { "args": {"working_dir": "[input][str] Enter your project directory...", "render_videos":"[input][str] Enter number of videos in single video...", "resolution": "get_video_resolutions"}, "kwargs": {}, "desc": "Quizomatic - Generate Quiz Videos" },
+                "default": { 
+                    "module": "generate_video",
+                    "args": {"working_dir": "[input][str] Enter your project directory...", "render_videos":"[input][str] Enter number of videos in single video...", "resolution": "get_video_resolutions"},
+                    "kwargs": {},
+                    "desc": "Quizomatic - Generate Quiz Videos"
+                }
+            },
+            "operations": {
+                "logs":   {"type":"logs", "module":"get_logs", "args": {"task_id":null}},
+                "files":  {"type":"files", "module":"get_files", "args": {"task_id":null}},
+                "delete": {"type":"btn", "module":"delete_task", "args": {"task_id":null}}
+            }
+        },
+        "Ollama_WebUI": {
+            "name": "Ollama WebUI - GUI",
+            "icon": "ollama_feature.png",
+            "module": "_backend.features.AI.ollama_model.ollama_",
+            "class": "OpenWebUIManager",
+            "external_link": "http://localhost:8093",
+            "methods": {
+                "default": { "module": "start_webui", "args": {}, "kwargs": { "WebUI": "[a][http://localhost:8093] Open in Browser"}, "desc": "Ollama WebUI - GUI" }
+            }
+        },
+        "TTS": {
+            "module": "_backend.features.AI.TTS.main",
+            "name": "TTS - Text To Speech",
+            "icon": "tts_feature.png",
+            "class": "TEXT_TO_SPEECH",
+            "methods": {
+                "bulk_tts_with_excel": { 
+                    "args": {"sheet_id": "[input][str] Enter sheet id...", "speaker_name":"get_voice", "language":"get_languages"}, 
+                    "kwargs": { "model_name": "get_installed_models", "Template": "[a][https://docs.google.com/spreadsheets/d/19MA75pOtEjoVxXC3cabQmev3oQCqdV2RvI6-4Zu_Pvg/edit?gid=0#gid=0] Sample" },
+                    "desc": "TTS - Bulk Transcribe Using Sheet"
+                },
+                "add_voice": { 
+                    "args": {"voice_name": "[input][str] Enter voice name...", "voice_drive_id": "[input][str] Enter file google drive id.." }, 
+                    "kwargs": {},
+                    "desc": "TTS - Add Voice"
+                },
+                "default": { 
+                    "module": "bulk_tts_with_excel",
+                    "args": { "model_name": "get_installed_models", "message":"[input][str] Enter your message...", "speaker_name":"get_voice", "language":"get_languages"}, 
+                    "kwargs": {  },  
+                    "desc": "TTS - Text To Speech",
+                    "rtn": {
+                        "format":  "audio/file",
+                        "rtn_value": "http://127.0.0.1:8081/download?token=gAAAAABnuqqBLroZzZp49VVxq9CBDj62HTXeou7yRS6ieTnQFRzf06Cl40Pb_UBAekROxntgz3b2oGsbcoTFK9TfedfgUgF_GMU2nsdRlk3jUDq-E4dTQWzZt36CgIFWb63YdjvxcLRq5Z2L-eD-Vq1zJXRgQugKIz7BuCBGXlB7CAHKTxxY984%3D"
+                    }
+                }
+            },
+            "operations": {
+                "logs":   {"type":"logs", "module":"get_logs", "args": {"task_id":null}},
+                "files":  {"type":"files", "module":"get_files", "args": {"task_id":null}},
+                "delete": {"type":"btn", "module":"delete_container_data", "args": {"task_id":null}}
+            }
+        },
+        "Whisper": {
+            "module": "_backend.features.AI.Whisper.main",
+            "name": "Whisper - Speech To Text",
+            "icon": "whisper_feature.png",
+            "class": "WhisperSTT",
+            "methods": {
+                "transcribe": { "args": {"audio_path": "[input][file] Enter audios path..."}, "kwargs": {}, "desc": "Whisper - Transcribe" },
+                "available_models": { "args": {}, "kwargs": {}, "desc": "Whisper - Avaiable Models" },
+                "default": { 
+                    "module": "transcribe",
+                    "args": {"audio_path": "[input][file] Enter audios path..."}, 
+                    "kwargs": {},
+                    "desc": "Whisper - Speech To Text"
+                }
+            },
+            "operations": {
+                "logs":   {"type":"logs", "module":"get_logs", "args": {"task_id":null}},
+                "files":  {"type":"files", "module":"get_files", "args": {"task_id":null}},
+                "delete": {"type":"btn", "module":"delete_container_data", "args": {"task_id":null}}
+            }
+        },
+        "Heygen": {
+            "module": "_backend.features.Heygen.main",
+            "name": "Heygen - Automation",
+            "icon": "heygen_feature.png",
+            "class": "HEYGEN_",
+            "methods": {
+                "remove_account": { 
+                    "args": {"account_id": "get_accounts"}, 
+                    "kwargs": {}, 
+                    "desc": "Heygen - Remove account" 
+                },
+                "add_account": { 
+                    "args": {
+                        "account_id": "[input][str] Enter unique account id...",
+                        "username": "[input][str] Enter heygen username or email...", 
+                        "password": "[input][str] Enter heygen password..."}, 
+                    "kwargs": { "is_paid":[true, false]}, 
+                    "desc": "Heygen - Add new account" 
+                },
+                "generate": { 
+                    "args": {
+                        "account_id": "get_accounts",
+                        "avatar_file_path": "[input][file] Enter avatar file path...", 
+                        "audio_file_path": "[input][file] Enter audio file path..."}, 
+                    "kwargs": { "is_portrait":[true, false]}, 
+                    "desc": "Heygen - Generate Video" 
+                },
+                "default": { 
+                    "module": "generate",
+                    "args": {
+                        "account_id": "get_accounts",
+                        "avatar_file_path": "[input][file] Enter avatar file path...", 
+                        "audio_file_path": "[input][file] Enter audio file path..."}, 
+                    "kwargs": { "is_portrait":["True", "False"]}, 
+                    "desc": "Heygen - Generate Video" 
+                }
+            },
+            "operations": {
+                "logs":   {"type":"logs", "module":"get_logs", "args": {"task_id":null}},
+                "files":  {"type":"files", "module":"get_files", "args": {"task_id":null}},
+                "delete": {"type":"btn", "module":"delete_data", "args": {"task_id":null}}
+            }
+        },
+        "Video_Transcribe": {
+            "module": "_backend.features.Video_Transcribe.video_transcribe",
+            "name": "Video Transcribe - Video/Audio To Text",
+            "icon": "videoTranscribe_feature.png",
+            "class": "VIDEO_TRANSCRIBE_",
+            "methods": {
+                "transcribe_video": { "args": {"video_path": "[input][file] Select video file..."}, "kwargs": {}, "desc": "Video Transcribe - Transcribe Video" },
+                "transcribe_audio": { "args": {"audio_path": "[input][file] Select audio file..."}, "kwargs": {}, "desc": "Video Transcribe - Transcribe Audio" },
+                "default": { 
+                    "module": "transcribe",
+                    "args": {"media_path": "[input][file] Select media file..."},
+                    "kwargs": {},
+                    "desc": "Video Transcribe - Video/Audio To Text",
+                    "rtn": {
+                        "format":  "response/str"
+                    }
+                }
+            },
+            "operations": {
+                "logs":   {"type":"logs", "module":"get_logs", "args": {"task_id":null}},
+                "files":  {"type":"files", "module":"get_files", "args": {"task_id":null}},
+                "delete": {"type":"btn", "module":"delete_container_data", "args": {"task_id":null}}
+            }
+        }
+    }
+}
