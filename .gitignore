@@ -57,3 +57,4 @@ output
 package-lock.json
 ffmpeg
 test.py
+_backend\features\Quizomatic\build

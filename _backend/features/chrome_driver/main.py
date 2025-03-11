@@ -71,13 +71,13 @@ def start_chrome_driver():
 
     chrome_driver_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'chrome_driver.py')
 
-    process = subprocess.Popen(
-        [python_executable, chrome_driver_path],
-        stdout=subprocess.PIPE, 
-        stderr=subprocess.PIPE,
-        encoding="utf-8",
-        text=True 
-    )
+    with open("backend.log", "w", encoding="utf-8") as log:
+        process = subprocess.Popen(
+            [python_executable, chrome_driver_path],
+            stdout=log, 
+            stderr=log,  # Save both stdout and stderr
+            text=True 
+        )
     print(f"Started chrome_driver.py (PID: {process.pid})")
     return process
 

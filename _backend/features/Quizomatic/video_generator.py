@@ -378,6 +378,7 @@ class QUIZOMATIC:
                 # sys.stdout.flush()
         self.running_process = process
         process.wait()
+        process.terminate()
         stderr_output = process.stderr.read()
         if stderr_output:
             if "No file extension specified" in stderr_output: return  True
