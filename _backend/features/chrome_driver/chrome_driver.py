@@ -26,6 +26,7 @@ CORS(app)
 
 virtual_disaplay  = None
 if platform.system() == "Linux":
+    os.environ["DISPLAY"] = ":99"
     try:
         # Start Virtual Display (Runs before any request)
         virtual_disaplay = Display(visible=0, size=(1920, 1080))

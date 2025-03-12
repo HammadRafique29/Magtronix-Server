@@ -30,6 +30,11 @@ This repository is currently being prepared to provide project details, updates,
 
 ## Linux Server
 -- ` sudo apt-get install -y xvfb `
+-- OPTIONAL `Xvfb :99 -screen 0 1920x1080x24 &`
+-- OPTIONAL `export DISPLAY=:99`
+
+-- Install Chrome 133
+-- Download `ChromeDriver` & place it in `_backend.features.chrome_driver`
 
 ## ⚙️ Configuration
 - Add Docker on Startup
