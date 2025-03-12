@@ -71,7 +71,7 @@ def start_chrome_driver():
 
     chrome_driver_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'chrome_driver.py')
 
-    with open("backend.log", "w", encoding="utf-8") as log:
+    with open(os.path.join(current_dir, "chrom_driver.log"), "w", encoding="utf-8") as log:
         process = subprocess.Popen(
             [python_executable, chrome_driver_path],
             stdout=log, 
