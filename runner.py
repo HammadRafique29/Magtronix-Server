@@ -218,7 +218,7 @@ if __name__ == "__main__":
             sys.exit()
 
         INSTALL_PYTHON_PACKAGES()
-        INSTALL_NPM_PACKAGES()
+        # INSTALL_NPM_PACKAGES()
 
         VENV_PYTHON_PATH = GET_VENE_EXECUTABLE("python")
 

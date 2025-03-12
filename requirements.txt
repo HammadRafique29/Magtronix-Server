@@ -35,12 +35,13 @@ cython>=0.29.30
 packaging>=23.1
 anyascii>=0.3.0
 fsspec>=2023.6.0
+pyvirtualdisplay
 
 google-auth-httplib2
 google-auth-oauthlib
 undetected-chromedriver
 google-api-python-client
 
-flask
+flask==3.0.3
 flask_cors
 torch

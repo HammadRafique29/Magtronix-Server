@@ -4,8 +4,11 @@ import json
 import time
 import shutil
 import random
+import platform
 import screeninfo
+import subprocess
 from selenium import webdriver
+from pyvirtualdisplay import Display 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from seleniumwire import webdriver as wire_webdriver
@@ -20,6 +23,18 @@ from flask import Flask, jsonify, request, render_template, send_file, url_for
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 CORS(app)
+
+virtual_disaplay  = None
+if platform.system() == "Linux":
+    try:
+        # Start Virtual Display (Runs before any request)
+        virtual_disaplay = Display(visible=0, size=(1920, 1080))
+        virtual_disaplay.start()
+    except FileNotFoundError as e:
+        subprocess.run(["sudo", "apt", "install", "-y", "xvfb"])
+        virtual_disaplay = Display(visible=0, size=(1920, 1080))
+        virtual_disaplay.start()
+
 
 DRVER_PATH      =  os.path.dirname(os.path.abspath(__file__))
 DRVIER_DB_PATH  =  os.path.join(DRVER_PATH, 'db')
@@ -531,6 +546,11 @@ def close_app():
             if "temp" in acc or "temp" == acc: delete_account(acc)
     except Exception as e: print(e)
 
+    try: 
+        print("Stoping Chrome Driver.....")
+        if virtual_disaplay: virtual_disaplay.stop()
+    except Exception as e: print("ERROR! ", e)
+
     os._exit(0)
     return "Shutting down the server...", 200
 
@@ -540,4 +560,6 @@ def close_app():
 
 if __name__ == "__main__":
 
-    app.run(host="0.0.0.0", port=8092, debug=True, use_reloader=False)
+    try: app.run(host="0.0.0.0", port=8092, debug=True, use_reloader=False)
+    except: 
+        if virtual_disaplay: virtual_disaplay.stop()

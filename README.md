@@ -27,6 +27,10 @@ This repository is currently being prepared to provide project details, updates,
 - Install Python3.11.9
 - Download ffmpeg and ADD TO PATH [Windows]
 
+
+## Linux Server
+-- ` sudo apt-get install -y xvfb `
+
 ## ⚙️ Configuration
 - Add Docker on Startup
 - Add Ollama on Startup
