@@ -90,7 +90,7 @@ def INSTALL_PYTHON_PACKAGES():
     process.wait()
     if process.returncode != 0: raise Exception(f"{RDCLR}-- Error creating virtual environment. Return code: {process.returncode}{RSCLR}")
 
-    print(f"{GRCLR}-- Installing Python Libraries...{RSCLR}")
+    print(f"{GRCLR}-- Installing Python Libraries...{RSCLR}\n")
     process = RUN_SUBPROCESS([GET_VENE_EXECUTABLE("pip"), "install", "-r", "requirements.txt"], CURRENT_DIR)
     process.wait()
     if process.returncode != 0: raise Exception(f"{RDCLR}-- Error installing packages. Return code: {process.returncode}{RSCLR}")
