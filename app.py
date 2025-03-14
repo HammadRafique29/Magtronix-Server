@@ -18,31 +18,28 @@ from werkzeug.exceptions import RequestEntityTooLarge
 from flask import Flask, jsonify, request, render_template, send_file, url_for, Response
 
 
+SECRET_KEY = None
+if os.path.exists(os.path.join(os.getcwd(), "secret.key")):
+    with open("secret.key", "rb") as key_file: SECRET_KEY = key_file.read().strip()
+else:
+    SECRET_KEY = Fernet.generate_key()
+    with open("secret.key", "wb") as key_file: key_file.write(SECRET_KEY)
 
+
+
+app = Flask(__name__)
+MAX_CONTENT_LENGTH = 100  # 100MB
+app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH * 1024 * 1024
+os.environ["PYTHONIOENCODING"]   = "utf-8"
+cipher = Fernet(SECRET_KEY)
+CORS(app)
 
 OPERATING_SYSTEM = platform.system()
 clear_screen = lambda: os.system("cls" if platform.system()=="Windows" else "clear")
 clear_screen()
 
 
-app = Flask(__name__)
-MAX_CONTENT_LENGTH = 100  # 100MB
-app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH * 1024 * 1024
-CORS(app)
-
-os.environ["PYTHONIOENCODING"] = "utf-8"
 chrome_process = start_chrome_driver()
-
-
-SECRET_KEY = None
-if os.path.exists(os.path.join(os.getcwd(), "secret.key")):
-    with open("secret.key", "rb") as key_file: SECRET_KEY = key_file.read().strip()
-
-else:
-    SECRET_KEY = Fernet.generate_key()
-    with open("secret.key", "wb") as key_file: key_file.write(SECRET_KEY)
-
-cipher = Fernet(SECRET_KEY)
 
 LOADED_FEATURES = {}
 OLLAMA_MANAGER = OllamaManager()
@@ -54,14 +51,21 @@ IMAGES_DIR = os.path.join(ASSESTS_DIR, "images")
 DATABASE_FILES = os.path.join(DATABASE, "files")
 DATABASE_FILE_JSON = os.path.join(DATABASE, 'file.json')
 FEATURES_CONFIG = os.path.join(BACKEND, 'features_config.json')
+CONNECTED_SERVERS = os.path.join(BACKEND, "connected_servers.json")
 FILES_DIR = os.path.join(str(user_documents_path()), "AUTO_SOCAIL_FILES")
 
 if not os.path.exists(DATABASE): os.makedirs(DATABASE)
 if not os.path.exists(DATABASE_FILES): os.makedirs(DATABASE_FILES)
 if not os.path.exists(IMAGES_DIR): os.makedirs(IMAGES_DIR)
 if not os.path.exists(FILES_DIR): os.makedirs(FILES_DIR)
+
+if not os.path.exists(CONNECTED_SERVERS):
+    with open(CONNECTED_SERVERS, 'w') as f: f.write(json.dumps([]))
+
 if not os.path.exists(DATABASE_FILE_JSON): 
     with open(DATABASE_FILE_JSON, 'w') as f: f.write(json.dumps({}))
+
+
 
 DYNAMIC_OBJ_PARAMETERS = {
     "API_ENDPOINTS": {
@@ -285,6 +289,27 @@ def get_feature_operations():
     
     response = getattr(feature['instance'], func_name)(**kwargs)
     return jsonify({ "status": "success", "error": "", "data": {'response': response, "task_id": response}}), 200
+
+
+
+
+
+
+
+
+@app.route("/get-servers", methods=["POST"])
+def get_connected_servers():
+
+    try:
+        with open(CONNECTED_SERVERS, "r") as f: 
+            servers = json.load(f)
+
+        return jsonify({ "status": "success", "error": "", "data": {'response': servers}}), 200
+    
+    except Exception as e:
+        return jsonify({ "status": "failed", "error": str(e), "data": {'response': ""}}), 400
+
+
 
 
 
