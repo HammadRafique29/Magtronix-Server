@@ -12,7 +12,7 @@
                 "default": {
                     "module": "ollama_chat",
                     "args": {"model_name": "get_installed_models", "prompt": "[input][str] Ask anything from AI..."}, 
-                    "kwargs": { "context": "[input][str] Enter system context...", "WebUI": "[a][http://localhost:8080] Open in Browser" },
+                    "kwargs": { "context": "[input][str] Enter system context...", "WebUI": "[a][http://localhost:8093] Open in Browser" },
                     "desc": "Ollama - AI Chatbot"
                 }
             },
