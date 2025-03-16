@@ -27,7 +27,7 @@ from unittest.mock import patch
 
 
 TTS_DATABASE_PATH = os.path.join(str(user_documents_path()), "Magtronix", "TTS")
-if not os.path.exists(): os.makedirs(TTS_DATABASE_PATH)
+if not os.path.exists(TTS_DATABASE_PATH): os.makedirs(TTS_DATABASE_PATH)
 
 
 class TEXT_TO_SPEECH:
