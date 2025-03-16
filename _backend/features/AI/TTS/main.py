@@ -212,15 +212,30 @@ class TEXT_TO_SPEECH:
             project_dir          : {"bind": "/tts_output", "mode": "rw"},
             self.TTS_MODELS_PATH : {"bind": "/root/.local/share/tts", "mode": "rw"},
         }
-        container = client.containers.run(
-            image,
-            tty=True,               # Keep it running  
-            detach=True,            # Run it Background
-            stdin_open=True,        # Allow interaction
-            auto_remove=True,       # Auto Delete After Stoping
-            volumes=volumes,        # Attach Volumes
-            entrypoint="/bin/bash", # Keeps container interactive
-        )
+
+        if torch.cuda.is_available():
+            container = client.containers.run(
+                image,
+                tty=True,               # Keep it running  
+                detach=True,            # Run it Background
+                stdin_open=True,        # Allow interaction
+                auto_remove=True,       # Auto Delete After Stoping
+                volumes=volumes,        # Attach Volumes
+                entrypoint="/bin/bash", # Keeps container interactive
+                runtime="nvidia",       # Use NVIDIA runtime for GPU support
+                environment={"NVIDIA_VISIBLE_DEVICES": "all"}  # Use all available GPUs
+            )
+
+        else:  
+            container = client.containers.run(
+                image,
+                tty=True,               # Keep it running  
+                detach=True,            # Run it Background
+                stdin_open=True,        # Allow interaction
+                auto_remove=True,       # Auto Delete After Stoping
+                volumes=volumes,        # Attach Volumes
+                entrypoint="/bin/bash", # Keeps container interactive
+            )
         self.RUNNING_CONTAINERS[task_id] = {
             'task_id': task_id, 
             'feature': "TTS", 
@@ -262,7 +277,8 @@ class TEXT_TO_SPEECH:
                 --text "{message}"
             """,
         ]
-        # if torch.cuda.is_available(): command.append("--gpu")
+        if torch.cuda.is_available(): 
+            command = command + ["--gpus", "all"]
 
         exec_result = self.RUNNING_CONTAINERS[task_id]['container'].exec_run(command, stream=True)
         for log in exec_result.output: 
