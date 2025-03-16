@@ -15,6 +15,7 @@ from random import randint
 from ctypes import wintypes
 from datetime import datetime
 from pydub import AudioSegment
+from platformsdirs import user_documents_path
 from colorama import Fore, Style, init as ColorInit
 from moviepy.editor import VideoFileClip, concatenate_videoclips
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -60,6 +61,9 @@ ANSWERS_AUDIO   =  os.path.join(PUBLIC_DIR,"assets", "audios", "an1.wav")
 COMINED_AUDIO   = os.path.join(PUBLIC_DIR, "assets", "audios", "combined_audio.mp3")
 BKG_IMAGE       = os.path.join(PUBLIC_DIR, "assets", "background_image.jpg")
 VIDEO_GENERATION_DATA = os.path.join(PUBLIC_DIR, "assets", "video_generation_data.json")
+
+QUIZOMATIC_STORAGE_DIR = os.path.join(str(user_documents_path()), "Magtronix", "Quizomatic")
+if not os.path.exists(QUIZOMATIC_STORAGE_DIR): os.makedirs(QUIZOMATIC_STORAGE_DIR)
 DEFAULT_RENDERING_INPUT_SHEET = "data.xlsx"
 
 ADD_TRANSCRIBED_DIR   = f"""{RSCLR}-- Add Project Transcibed Folder (y/n): {YLCLR}"""
@@ -580,10 +584,11 @@ class QUIZOMATIC:
                 if isTest: return output_dir
 
                 zip_name = f'quizomatic_{self.get_current_datetime()}.zip'  # Create Zip Archive
-                zip_path = os.path.join(tempfile.mkdtemp(), zip_name)
+                zip_path = os.path.join(QUIZOMATIC_STORAGE_DIR, zip_name)
                 shutil.make_archive(zip_path.replace('.zip', ''), 'zip', output_dir)
 
                 download_link = self.create_file_download_link(zip_path)
+                os.remove(output_dir)
 
                 self.RUNNING_TASKS[task_id]['files'].append({
                     "name": os.path.basename(output_dir),

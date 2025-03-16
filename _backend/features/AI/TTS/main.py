@@ -258,7 +258,7 @@ class TEXT_TO_SPEECH:
                 --text "{message}"
             """,
         ]
-        if torch.cuda.is_available(): command.append("--gpu")
+        # if torch.cuda.is_available(): command.append("--gpu")
 
         exec_result = self.RUNNING_CONTAINERS[task_id]['container'].exec_run(command, stream=True)
         for log in exec_result.output: 
@@ -316,6 +316,8 @@ class TEXT_TO_SPEECH:
                 df = pd.read_csv(SHEET_URL, skiprows=0)
                 nested_list = df.values.tolist()
 
+                self.RUNNING_CONTAINERS[task_id]['isRunning'] = True
+
                 def perform_bulk_task(task_id):
 
                     AUDIO_FILES = []
@@ -357,7 +359,7 @@ class TEXT_TO_SPEECH:
                 return { 'task_id' : task_id }
 
         except Exception as e:
-
+            print(e)
             shutil.rmtree(WORKIND_DIR)
             try:
                 if self.RUNNING_CONTAINERS.get(task_id): 
