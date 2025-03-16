@@ -28,7 +28,7 @@ else:
 
 
 app = Flask(__name__)
-MAX_CONTENT_LENGTH = 100  # 100MB
+MAX_CONTENT_LENGTH = 2048  # 100MB
 app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH * 1024 * 1024
 os.environ["PYTHONIOENCODING"]   = "utf-8"
 cipher = Fernet(SECRET_KEY)

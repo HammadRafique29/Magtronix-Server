@@ -15,7 +15,7 @@ from random import randint
 from ctypes import wintypes
 from datetime import datetime
 from pydub import AudioSegment
-from platformsdirs import user_documents_path
+from platformdirs import user_documents_path
 from colorama import Fore, Style, init as ColorInit
 from moviepy.editor import VideoFileClip, concatenate_videoclips
 warnings.filterwarnings("ignore", category=UserWarning)
