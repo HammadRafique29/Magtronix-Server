@@ -26,6 +26,10 @@ from unittest.mock import patch
 # ['en', 'es', 'fr', 'de', 'it', 'pt', 'pl', 'tr', 'ru', 'nl', 'cs', 'ar', 'zh-cn', 'hu', 'ko', 'ja', 'hi']
 
 
+TTS_DATABASE_PATH = os.path.join(str(user_documents_path()), "Magtronix", "TTS")
+if not os.path.exists(): os.makedirs(TTS_DATABASE_PATH)
+
+
 class TEXT_TO_SPEECH:
 
     def __init__(self, API_ENDPOINTS={}) -> None:
@@ -327,7 +331,7 @@ class TEXT_TO_SPEECH:
                             task_id, file_path = self.transcribe(
                                 task_id=task_id, message=message, speaker_name=speaker_name, language=language, output_dir=WAV_FILES_DIR, isTest=False)
                             
-                            file_path = self.create_file_download_link(file_path)
+                            # file_path = self.create_file_download_link(file_path)
                             if file_path: temp.append(file_path)
 
                             if self.RUNNING_CONTAINERS.get(task_id): 
@@ -339,8 +343,10 @@ class TEXT_TO_SPEECH:
                     output_file = os.path.join(WORKIND_DIR, 'data.xlsx')                     # Save to Excel
                     pd.DataFrame(RESULTS).to_excel(output_file, index=False, header=False)
 
-                    zip_name = os.path.join(WORKIND_DIR, f'text_to_speech_{self.get_current_datetime()}.zip')  # Create Zip Archive
+                    zip_name = os.path.join(TTS_DATABASE_PATH, f'text_to_speech_{self.get_current_datetime()}.zip')  # Create Zip Archive
                     shutil.make_archive(zip_name.replace('.zip', ''), 'zip', WORKIND_DIR)
+
+                    shutil.rmtree(WORKIND_DIR)
 
                     self.RUNNING_CONTAINERS[task_id]['files'].append({
                         "name": os.path.basename(zip_name),

@@ -55,6 +55,7 @@ class VIDEO_TRANSCRIBE_:
             audio.write_audiofile(output_audio_path, codec="mp3", ffmpeg_params=["-loglevel", "error"], logger=None)
             video.close()
             response = self.transcribe_audio(output_audio_path)
+            os.remove(output_audio_path)
 
             return {"rtn": "response/str", "value": response.get('value', '')} 
 

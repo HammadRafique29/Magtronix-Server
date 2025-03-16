@@ -588,7 +588,7 @@ class QUIZOMATIC:
                 shutil.make_archive(zip_path.replace('.zip', ''), 'zip', output_dir)
 
                 download_link = self.create_file_download_link(zip_path)
-                os.remove(output_dir)
+                shutil.rmtree(output_dir)
 
                 self.RUNNING_TASKS[task_id]['files'].append({
                     "name": os.path.basename(output_dir),
