@@ -5,8 +5,12 @@ from moviepy.editor import VideoFileClip
 import tempfile
 import random
 import logging
+from platformdirs import user_documents_dir
 
 logging.getLogger("moviepy").setLevel(logging.ERROR)
+
+VIDEO_TRANSCRIBE_DIR = os.path.join(str(user_documents_dir()), "Magtronix", "VideoTranscribe")
+if not os.path.exists(VIDEO_TRANSCRIBE_DIR): os.makedirs(VIDEO_TRANSCRIBE_DIR)
 
 class VIDEO_TRANSCRIBE_:
 
@@ -23,7 +27,7 @@ class VIDEO_TRANSCRIBE_:
             "mp3", "wav", "aac", "flac", "ogg", "wma", "m4a", "alac", "opus", "amr",
             "aiff", "au", "ra", "ac3", "tta", "mp2", "dts", "mid", "mka"
         ]
-        self.TEMP_AUDIO_DIR = tempfile.mkdtemp()
+        self.TEMP_AUDIO_DIR = VIDEO_TRANSCRIBE_DIR
 
         self.RUNNING_TASKS = []
 

@@ -13,11 +13,16 @@ import random
 import time
 import shutil
 import docker
+from TTS.api import TTS
 from threading import Thread, Event
 from datetime import datetime
 from platformdirs import user_documents_path
 from unittest.mock import patch
+import logging
 
+
+# logging.getLogger("TTS").setLevel(logging.ERROR)
+# logging.getLogger("tts").setLevel(logging.ERROR)
 
 # "Adam, Alice, Aria, Bill, George, Lilly, Reacheal, Sarah", "Alex", "Arabella", "Bill L. Oxley", "BRIAN.wav", "Brittney", 
 # "Dramatic British.wav", "Heather Rey", "John Fernandes", "Laura", "Mark", "Matilda", "Roger", "Sally Ford", "SARAH", "Tim Rooney", 
@@ -78,9 +83,10 @@ class TEXT_TO_SPEECH:
 
     def stop_container(self, container):
         try:
-            container.stop()
-            container.remove()
-            print(f"Container {container.id} stopped and removed.")
+            if container:
+                container.stop()
+                container.remove()
+                print(f"Container {container.id} stopped and removed.")
         except Exception as e:
             print(f"Error stopping container: {e}")
 
@@ -147,6 +153,28 @@ class TEXT_TO_SPEECH:
         return list(self.VOICES.keys())
     
 
+    def run_local_tts(self, task_id=None):
+        task_id = "Bulk-Transcribe-TTS_" + str(random.randint(11111,99999)) if not task_id else task_id
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+
+        with patch('builtins.input', return_value='y'):
+            tts_obj = TTS("tts_models/multilingual/multi-dataset/xtts_v2").to(device)
+        
+        self.RUNNING_CONTAINERS[task_id] = {
+            'task_id': task_id, 
+            'feature': "TTS", 
+            "task_type": f"TTS - Transcribe",
+            "tags": f"Bulk Text To Speech, tts_models--multilingual--multi-dataset--xtts_v2", 
+            'container': None, 
+            'local_tts_obj': tts_obj,
+            "progress": 0, 
+            "logs": """""", 
+            "isRunning": False, 
+            "files": []
+        }
+
+        return task_id, tts_obj
+
     def get_languages(self):
         temp = []
         for key, val in self.LANGUAGES.items(): temp.append(f"{key} ({val['value']})")
@@ -187,7 +215,10 @@ class TEXT_TO_SPEECH:
         while self.RUNNING_CONTAINERS[task_id].get("isRunning", True):  time.sleep(1)
         self.RUNNING_CONTAINERS[task_id]['isRunning'] = True
 
-        try: task_id, file_path = func(**kwargs)
+        file_path = None
+        try: 
+            task_id, file_path = func(**kwargs)
+            print("File Path: ", file_path)
         except Exception as e: print(e)
 
         self.RUNNING_CONTAINERS[task_id]['isRunning'] = False
@@ -252,7 +283,7 @@ class TEXT_TO_SPEECH:
 
 
 
-    def transcribe(self, message="Hi", speaker_name="SARAH", language="en", output_dir=None, model_name="tts_models--multilingual--multi-dataset--xtts_v2", image="ghcr.io/coqui-ai/tts", WORKIND_DIR=None, task_id=None, isTest=True):
+    def transcribe(self, message="Hi", speaker_name="SARAH", language="en", output_dir=None, model_name="tts_models--multilingual--multi-dataset--xtts_v2", image="ghcr.io/coqui-ai/tts", WORKIND_DIR=None, task_id=None, isTest=True, local_tts_obj=False):
 
         language = language.split(' ')
         language = language[0] if len(language)>0 else language
@@ -266,6 +297,13 @@ class TEXT_TO_SPEECH:
         output_file = f"audio_{random.randint(11111, 99999)}.wav"
         output_path = f"/tts_output/Audios/{output_file}"
         speaker_path = f"/tts_output/Speakers/{speaker_name}.wav"
+
+        print("Going inside Transcribe: ")
+        if local_tts_obj:
+            try:
+                resonse = local_tts_obj.tts_to_file(text=message, speaker_wav=str(speaker_name), language=language, file_path=os.path.join(output_dir, output_file))
+                return task_id, os.path.join(output_dir, output_file)
+            except Exception as e: raise Exception("Local TTS! Unknow Error Occured ", e)
 
         command = [
             "bash", "-c",
@@ -288,13 +326,14 @@ class TEXT_TO_SPEECH:
     
 
 
-    def bulk_tts_with_excel(self, sheet_id=None, message="Hi", model_name="tts_models--multilingual--multi-dataset--xtts_v2", image="ghcr.io/coqui-ai/tts:latest", speaker_name="SARAH", language="en", isSample=False):
+    def bulk_tts_with_excel(self, sheet_id=None, message="Hi", model_name="tts_models--multilingual--multi-dataset--xtts_v2", image="ghcr.io/coqui-ai/tts:latest", speaker_name="SARAH", language="en", isSample=False, local_tts=True):
 
         task_id = "default"
 
         try:
             WORKIND_DIR = os.path.join(
                 str(user_documents_path()), 
+                TTS_DATABASE_PATH,
                 f"TTS_Output_Samples" if not sheet_id else f"TTS_Output_{random.randint(11111,99999)}"
             )
             SPEAKERS_DIR  = os.path.join(WORKIND_DIR, "Speakers")
@@ -304,21 +343,24 @@ class TEXT_TO_SPEECH:
             if not os.path.exists(SPEAKERS_DIR):  os.mkdir(SPEAKERS_DIR)
             if not os.path.exists(WAV_FILES_DIR): os.mkdir(WAV_FILES_DIR)
 
-            speaker_file = f"{SPEAKERS_DIR}/{speaker_name}.wav"
+            speaker_file = os.path.join(SPEAKERS_DIR, f"{speaker_name}.wav")
             if not os.path.exists(speaker_file):
                 self.download_speaker(self.VOICES[speaker_name], speaker_name, SPEAKERS_DIR)
 
             if not sheet_id:
+                tts_obj = None
                 if not self.RUNNING_CONTAINERS.get('default'):
-                    task_id, container = self.run_docker_container( image, WORKIND_DIR, task_id="default")
+                    if local_tts: task_id, tts_obj = self.run_local_tts(task_id="default")
+                    else: task_id, container = self.run_docker_container( image, WORKIND_DIR, task_id="default")
 
                 kwargs = {
                     "task_id":task_id, 
                     "message":message, 
-                    "speaker_name":speaker_name, 
+                    "speaker_name": speaker_file if tts_obj else speaker_name, 
                     "language":language, 
                     "output_dir":WAV_FILES_DIR, 
-                    "isTest":True
+                    "isTest":True,
+                    "local_tts_obj": tts_obj if local_tts else None
                 }
                 self.temp_queue[task_id] = queue.Queue()
                 temp_thread = Thread(target=self.wait_for_task_done, args=(self.transcribe,), kwargs=kwargs, daemon=True)
@@ -330,22 +372,34 @@ class TEXT_TO_SPEECH:
 
             else:
 
-                task_id, container = self.run_docker_container(image, WORKIND_DIR)
+                
 
                 SHEET_URL = f'https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv'
                 df = pd.read_csv(SHEET_URL, skiprows=0)
                 nested_list = df.values.tolist()
 
-                self.RUNNING_CONTAINERS[task_id]['isRunning'] = True
-
                 def perform_bulk_task(task_id):
 
+                    if local_tts: task_id, tts_obj = self.run_local_tts()
+                    else: task_id, container = self.run_docker_container(image, WORKIND_DIR)
+
+                    self.RUNNING_CONTAINERS[task_id]['isRunning'] = True
+                    
                     AUDIO_FILES = []
                     for index, content in enumerate(nested_list):
                         temp = []
-                        for index2, message in enumerate(content):                            
+                        for index2, message in enumerate(content):    
+                            if self.RUNNING_CONTAINERS[task_id].get("isRunning", False) == False: break
+                                                 
                             task_id, file_path = self.transcribe(
-                                task_id=task_id, message=message, speaker_name=speaker_name, language=language, output_dir=WAV_FILES_DIR, isTest=False)
+                                task_id=task_id, 
+                                message=message, 
+                                speaker_name=speaker_file if tts_obj else speaker_name, 
+                                language=language, 
+                                output_dir=WAV_FILES_DIR, 
+                                isTest=False, 
+                                local_tts_obj=tts_obj if local_tts else None
+                            )
                             
                             # file_path = self.create_file_download_link(file_path)
                             if file_path: temp.append(file_path)
@@ -354,12 +408,13 @@ class TEXT_TO_SPEECH:
                                 self.RUNNING_CONTAINERS[task_id]['progress'] = f"{ round((((index * 3) + (index2 + 1)) / (len(nested_list) * 3)) * 100 )}"
 
                         AUDIO_FILES.append(temp)
-                        
+
+                          
                     RESULTS = [msg + audio for msg, audio in zip(nested_list, AUDIO_FILES)]  # Combine Data and Audio File Names
                     output_file = os.path.join(WORKIND_DIR, 'data.xlsx')                     # Save to Excel
                     pd.DataFrame(RESULTS).to_excel(output_file, index=False, header=False)
 
-                    zip_name = os.path.join(TTS_DATABASE_PATH, f'text_to_speech_{self.get_current_datetime()}.zip')  # Create Zip Archive
+                    zip_name = os.path.join(TTS_DATABASE_PATH, f'{self.get_current_datetime()}.zip')  # Create Zip Archive
                     shutil.make_archive(zip_name.replace('.zip', ''), 'zip', WORKIND_DIR)
 
                     shutil.rmtree(WORKIND_DIR)

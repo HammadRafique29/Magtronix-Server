@@ -28,6 +28,7 @@ requests
 setuptools
 pycryptodome
 
+tts==0.22.0
 pyyaml>=6.0
 aiohttp>=3.8.1
 blinker==1.7.0
@@ -42,6 +43,7 @@ google-auth-oauthlib
 undetected-chromedriver
 google-api-python-client
 
+torch==2.5.0
+torchaudio==2.5.0
 flask==3.0.3
 flask_cors
-torch

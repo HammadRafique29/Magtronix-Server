@@ -44,6 +44,9 @@ This repository is currently being prepared to provide project details, updates,
 - ghcr.io/open-webui/open-webui:main
 - ghcr.io/coqui-ai/tts:latest
 
+## GPU Based System:
+- pip install torch==2.0.1+cu117 torchvision==0.15.2+cu117 --extra-index-url https://download.pytorch.org/whl/cu117
+
 ## 📥 Pulling Ollama Models
 - llama3.2:1b       [Ollama - Optional]
 - deepseek-r1:1.5b  [Ollama - Optional]

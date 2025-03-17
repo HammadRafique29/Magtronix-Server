@@ -81,10 +81,14 @@ DYNAMIC_OBJ_PARAMETERS = {
 FILES_DATABASE = {}
 
 def initiate_file_db():
-    data = read_files()
-    if data:
-        for id, loc in data.items(): os.remove(loc)
-    with open(DATABASE_FILE_JSON, 'w') as f: f.write(json.dumps({}))
+    try:
+        data = read_files()
+        if data:
+            for id, loc in data.items(): shutil.rmtree(loc)
+        with open(DATABASE_FILE_JSON, 'w') as f: f.write(json.dumps({}))
+        shutil.rmtree(DATABASE_FILES, ignore_errors=True)  # Deletes folder & contents
+        if not os.path.exists(DATABASE_FILES): os.makedirs(DATABASE_FILES)
+    except: pass
 
 def add_file(id, filePath):
     files = read_files()
@@ -335,6 +339,8 @@ def generate_download_link():
         return jsonify({"error": "Missing 'file_path' in request"}), 400
 
     file_path = data["file_path"]
+
+    print("######", file_path)
     if request.remote_addr != "127.0.0.1":
         return jsonify({"error": "Unauthorized access"}), 403
 
