@@ -94,16 +94,33 @@ class TEXT_TO_SPEECH:
 
     def installation(self):
         client = docker.from_env()
-        docker_image = None
-        try: docker_image = client.images.get("magtronix_tts_image")
-        except: pass
-        if not docker_image:
-            print("--Building Magteonix Jupyter Container")
-            dockerfile_dir = os.path.dirname(os.path.abspath(__file__))
-            image, logs = client.images.build(path=dockerfile_dir, tag="magtronix_tts_image", nocache=True)
-            for log in logs:
-                if "stream" in log:
-                    print(log["stream"].strip())
+        # Check if image exists
+        try:
+            docker_image = client.images.get("magtronix_tts_image")
+            return  # Stop execution if image exists
+        except docker.errors.ImageNotFound:
+            print("--Building Magtronix Jupyter Container")
+
+        dockerfile_dir = os.path.dirname(os.path.abspath(__file__))
+        image, logs = client.images.build(path=dockerfile_dir, tag="magtronix_tts_image", nocache=True)
+
+        # Print logs immediately as they come
+        for log in logs:
+            log_str = log.get("stream", "").strip() or log.get("error", "").strip()
+            if log_str:
+                print(log_str)
+
+        # Verify the image was tagged correctly
+        image.reload()
+        if "magtronix_tts_image:latest" not in image.tags:
+            print("Warning: Image was built but not tagged properly. Retagging now...")
+            client.api.tag(image.id, "magtronix_tts_image", "latest")
+
+        print(f"Image built successfully: {image.tags}")
+
+        # Return immediately to ensure execution continues
+        return
+
         
 
 
