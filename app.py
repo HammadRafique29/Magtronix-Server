@@ -340,7 +340,6 @@ def generate_download_link():
 
     file_path = data["file_path"]
 
-    print("######", file_path)
     if request.remote_addr != "127.0.0.1":
         return jsonify({"error": "Unauthorized access"}), 403
 

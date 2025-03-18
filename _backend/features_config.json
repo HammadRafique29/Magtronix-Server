@@ -63,6 +63,11 @@
                     "kwargs": { "model_name": "get_installed_models", "Template": "[a][https://docs.google.com/spreadsheets/d/19MA75pOtEjoVxXC3cabQmev3oQCqdV2RvI6-4Zu_Pvg/edit?gid=0#gid=0] Sample" },
                     "desc": "TTS - Bulk Transcribe Using Sheet"
                 },
+                "run_tts_jupyter": { 
+                    "args": {"run_with_gpu": [false, true]}, 
+                    "kwargs": {},
+                    "desc": "TTS - Bulk Transcribe Using Jupyter"
+                },
                 "add_voice": { 
                     "args": {"voice_name": "[input][str] Enter voice name...", "voice_drive_id": "[input][str] Enter file google drive id.." }, 
                     "kwargs": {},

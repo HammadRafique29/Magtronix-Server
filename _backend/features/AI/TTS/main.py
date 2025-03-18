@@ -1,24 +1,22 @@
 
-
-import torch
-import requests
-# from TTS.api import TTS
-import random
+import re
 import os
 import json
-import queue
-import pandas as pd
-import gdown
-import random
 import time
-import shutil
+import torch
+import gdown
 import docker
-from TTS.api import TTS
-from threading import Thread, Event
-from datetime import datetime
-from platformdirs import user_documents_path
-from unittest.mock import patch
+import random
+import shutil
 import logging
+import requests
+import pandas as pd
+# from TTS.api import TTS
+from queue import Queue
+from datetime import datetime
+from unittest.mock import patch
+from threading import Thread, Event
+from platformdirs import user_documents_path
 
 
 # logging.getLogger("TTS").setLevel(logging.ERROR)
@@ -41,7 +39,7 @@ class TEXT_TO_SPEECH:
 
         self.TTS_MODELS_PATH = os.path.join(str(user_documents_path()), "tts_models") 
         self.API_ENDPOINTS = API_ENDPOINTS
-        self.request_queue = queue.Queue()
+        self.request_queue = Queue()
         self.LANGUAGES = {
             'en': {'value': 'English', 'index': 0}, 'es': {'value': 'Spanish', 'index': 1},
             'fr': {'value': 'French', 'index': 2}, 'de': {'value': 'German', 'index': 3},
@@ -55,9 +53,11 @@ class TEXT_TO_SPEECH:
         }
         self.VOICES = {}
         self.RUNNING_CONTAINERS = {}
+        self.RUNNING_JUPYTER_CONTAINERS = []
         self.temp_queue = {}
         self.load_voices()
         self.API_ENDPOINTS = API_ENDPOINTS
+        self.get_tts_model_dir = lambda: os.path.join(str(user_documents_path()), "tts_models")
         Thread(target=self.process_queue, daemon=True).start()
         # with patch('builtins.input', return_value='y'):
         #     self.tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2").to(device)
@@ -72,6 +72,7 @@ class TEXT_TO_SPEECH:
 
 
     def clear_resources(self):
+        
         print("#### Destructor: Text-To-Speech")
         for key, cont in self.RUNNING_CONTAINERS.items():
             print(" --Stoping: ", cont['tags'])
@@ -79,6 +80,31 @@ class TEXT_TO_SPEECH:
                 self.stop_container(cont['container'])
 
             self.RUNNING_CONTAINERS = {}
+        
+        client = docker.from_env()
+        for cont in self.RUNNING_JUPYTER_CONTAINERS:
+            if cont:
+                try:
+                    container = client.containers.get("magtronix_tts_container")
+                    container.remove(force=True)
+                except Exception as e: pass
+                self.RUNNING_JUPYTER_CONTAINERS = []
+
+
+
+    def installation(self):
+        client = docker.from_env()
+        docker_image = None
+        try: docker_image = client.images.get("magtronix_tts_image")
+        except: pass
+        if not docker_image:
+            print("--Building Magteonix Jupyter Container")
+            dockerfile_dir = os.path.dirname(os.path.abspath(__file__))
+            image, logs = client.images.build(path=dockerfile_dir, tag="magtronix_tts_image", nocache=True)
+            for log in logs:
+                if "stream" in log:
+                    print(log["stream"].strip())
+        
 
 
     def stop_container(self, container):
@@ -146,34 +172,12 @@ class TEXT_TO_SPEECH:
             try:
                 event = self.request_queue.get(timeout=10)
                 event.set()
-            except queue.Empty: pass 
+            except: pass 
 
 
     def get_voice(self):
         return list(self.VOICES.keys())
     
-
-    def run_local_tts(self, task_id=None):
-        task_id = "Bulk-Transcribe-TTS_" + str(random.randint(11111,99999)) if not task_id else task_id
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-
-        with patch('builtins.input', return_value='y'):
-            tts_obj = TTS("tts_models/multilingual/multi-dataset/xtts_v2").to(device)
-        
-        self.RUNNING_CONTAINERS[task_id] = {
-            'task_id': task_id, 
-            'feature': "TTS", 
-            "task_type": f"TTS - Transcribe",
-            "tags": f"Bulk Text To Speech, tts_models--multilingual--multi-dataset--xtts_v2", 
-            'container': None, 
-            'local_tts_obj': tts_obj,
-            "progress": 0, 
-            "logs": """""", 
-            "isRunning": False, 
-            "files": []
-        }
-
-        return task_id, tts_obj
 
     def get_languages(self):
         temp = []
@@ -283,7 +287,7 @@ class TEXT_TO_SPEECH:
 
 
 
-    def transcribe(self, message="Hi", speaker_name="SARAH", language="en", output_dir=None, model_name="tts_models--multilingual--multi-dataset--xtts_v2", image="ghcr.io/coqui-ai/tts", WORKIND_DIR=None, task_id=None, isTest=True, local_tts_obj=False):
+    def transcribe(self, message="Hi", speaker_name="SARAH", language="en", output_dir=None, model_name="tts_models--multilingual--multi-dataset--xtts_v2", image="ghcr.io/coqui-ai/tts", WORKIND_DIR=None, task_id=None, isTest=True):
 
         language = language.split(' ')
         language = language[0] if len(language)>0 else language
@@ -297,13 +301,6 @@ class TEXT_TO_SPEECH:
         output_file = f"audio_{random.randint(11111, 99999)}.wav"
         output_path = f"/tts_output/Audios/{output_file}"
         speaker_path = f"/tts_output/Speakers/{speaker_name}.wav"
-
-        print("Going inside Transcribe: ")
-        if local_tts_obj:
-            try:
-                resonse = local_tts_obj.tts_to_file(text=message, speaker_wav=str(speaker_name), language=language, file_path=os.path.join(output_dir, output_file))
-                return task_id, os.path.join(output_dir, output_file)
-            except Exception as e: raise Exception("Local TTS! Unknow Error Occured ", e)
 
         command = [
             "bash", "-c",
@@ -326,7 +323,7 @@ class TEXT_TO_SPEECH:
     
 
 
-    def bulk_tts_with_excel(self, sheet_id=None, message="Hi", model_name="tts_models--multilingual--multi-dataset--xtts_v2", image="ghcr.io/coqui-ai/tts:latest", speaker_name="SARAH", language="en", isSample=False, local_tts=True):
+    def bulk_tts_with_excel(self, sheet_id=None, message="Hi", model_name="tts_models--multilingual--multi-dataset--xtts_v2", image="ghcr.io/coqui-ai/tts:latest", speaker_name="SARAH", language="en", isSample=False):
 
         task_id = "default"
 
@@ -350,8 +347,7 @@ class TEXT_TO_SPEECH:
             if not sheet_id:
                 tts_obj = None
                 if not self.RUNNING_CONTAINERS.get('default'):
-                    if local_tts: task_id, tts_obj = self.run_local_tts(task_id="default")
-                    else: task_id, container = self.run_docker_container( image, WORKIND_DIR, task_id="default")
+                    task_id, container = self.run_docker_container( image, WORKIND_DIR, task_id="default")
 
                 kwargs = {
                     "task_id":task_id, 
@@ -359,10 +355,9 @@ class TEXT_TO_SPEECH:
                     "speaker_name": speaker_file if tts_obj else speaker_name, 
                     "language":language, 
                     "output_dir":WAV_FILES_DIR, 
-                    "isTest":True,
-                    "local_tts_obj": tts_obj if local_tts else None
+                    "isTest":True
                 }
-                self.temp_queue[task_id] = queue.Queue()
+                self.temp_queue[task_id] = Queue()
                 temp_thread = Thread(target=self.wait_for_task_done, args=(self.transcribe,), kwargs=kwargs, daemon=True)
                 temp_thread.start()
                 temp_thread.join()
@@ -380,8 +375,7 @@ class TEXT_TO_SPEECH:
 
                 def perform_bulk_task(task_id):
 
-                    if local_tts: task_id, tts_obj = self.run_local_tts()
-                    else: task_id, container = self.run_docker_container(image, WORKIND_DIR)
+                    task_id, container = self.run_docker_container(image, WORKIND_DIR)
 
                     self.RUNNING_CONTAINERS[task_id]['isRunning'] = True
                     
@@ -397,8 +391,7 @@ class TEXT_TO_SPEECH:
                                 speaker_name=speaker_file if tts_obj else speaker_name, 
                                 language=language, 
                                 output_dir=WAV_FILES_DIR, 
-                                isTest=False, 
-                                local_tts_obj=tts_obj if local_tts else None
+                                isTest=False
                             )
                             
                             # file_path = self.create_file_download_link(file_path)
@@ -446,6 +439,85 @@ class TEXT_TO_SPEECH:
             except Exception as e: pass
             raise Exception(str(e))
 
+
+    def run_tts_jupyter(self, gpu):
+
+        client = docker.from_env()
+        container = None
+        jupyter_notebook_url = None
+        temp_queue = Queue()
+
+        try:
+            container_kwargs = {
+                "image": "magtronix_tts_image",
+                "detach": True,
+                "auto_remove": True,
+                "tty": True,
+                "stdin_open": True,
+                "ports": {8888: 8888},
+                "volumes": {self.get_tts_model_dir(): {"bind": "/root/.local/share/tts", "mode": "rw"}},
+                "name": "magtronix_tts_container"
+            }
+            if gpu: container_kwargs["runtime"] = "nvidia"
+
+            def run_tts_docker():
+
+                container = None
+
+                try:
+                    container = client.containers.run(**container_kwargs)
+                    print(f"Container started with ID: {container.id}")
+                    self.RUNNING_JUPYTER_CONTAINERS.append(container)
+
+                    time.sleep(5)
+
+                    jupyter_notebook_url = None
+                    log_buffer = ""
+                    
+                    for log in container.logs(stream=True):
+                        log_chunk = log.decode("utf-8")
+                        log_buffer += log_chunk
+
+                        if "\n" in log_buffer:
+
+                            lines = log_buffer.split("\n")
+                            for line in lines[:-1]:
+
+                                # Try matching the Jupyter Notebook URL directly
+                                url_match = re.search(r"(http://127\.0\.0\.1:\d+/\?token=\S+)", line)
+                                if url_match:
+                                    jupyter_notebook_url = url_match.group(1)
+                                    break
+
+                                # Alternatively match a URL with the tree endpoint
+                                if "http://127.0.0.1:8888/tree?" in line:
+                                    jupyter_notebook_url = line
+                                    break
+                            
+                            log_buffer = lines[-1]
+                            if jupyter_notebook_url: break
+
+                    if jupyter_notebook_url: temp_queue.put((True, jupyter_notebook_url.split(" ")[-1])) 
+                    else:  raise Exception(f"TTS - Jupyter URL not found {jupyter_notebook_url}")
+                    
+                except Exception as e:
+                    if container:
+                        try: container.stop()
+                        except Exception as er: pass
+                    temp_queue.put((False, str(e)))
+
+            t1 = Thread(target=run_tts_docker, daemon=True)
+            t1.start()
+            t1.join()
+
+            results = temp_queue.get()
+            if results[0]: return {"rtn": "response/str", "value": results[1].replace("\r", "")}
+            else: raise Exception(results[1])
+
+        except Exception as e: 
+            if "nvidia-container-cli: initialization error: WSL environment" in str(e):
+                raise Exception(f"Starting TTS - Jupyter Failed: Graphic Card Not Supported")
+            else: raise Exception(f"Starting TTS - Jupyter Failed:", e)
 
 
 

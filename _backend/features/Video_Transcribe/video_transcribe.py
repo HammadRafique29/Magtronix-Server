@@ -49,7 +49,6 @@ class VIDEO_TRANSCRIBE_:
 
             output_audio_path = os.path.join(self.TEMP_AUDIO_DIR, f"audio_{random.randint(11111,99999)}.mp3")
 
-            # Suppress MoviePy and ImageIO logs
             logging.getLogger("moviepy").setLevel(logging.ERROR)
             logging.getLogger("imageio_ffmpeg").setLevel(logging.ERROR)
             os.environ["FFMPEG_STDERR"] = "quiet"
@@ -79,7 +78,6 @@ class VIDEO_TRANSCRIBE_:
 
             if response.status_code == 200:
                 response = response.json()
-                os.remove(audio_path)
                 return {"rtn": "response/str", "value":  response.get('data', {}).get('response', {}).get('value', '')}  
             else: 
                 print(f"ERROR! Failed to Transcribe Audio... \n {response.json().get('error')}")
