@@ -457,7 +457,7 @@ class TEXT_TO_SPEECH:
             raise Exception(str(e))
 
 
-    def run_tts_jupyter(self, gpu):
+    def run_tts_jupyter(self, run_with_gpu):
 
         client = docker.from_env()
         container = None
@@ -475,7 +475,7 @@ class TEXT_TO_SPEECH:
                 "volumes": {self.get_tts_model_dir(): {"bind": "/root/.local/share/tts", "mode": "rw"}},
                 "name": "magtronix_tts_container"
             }
-            if gpu: container_kwargs["runtime"] = "nvidia"
+            if run_with_gpu: container_kwargs["runtime"] = "nvidia"
 
             def run_tts_docker():
 
