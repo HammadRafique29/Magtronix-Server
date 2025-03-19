@@ -65,7 +65,7 @@
                 },
                 "run_tts_jupyter": { 
                     "args": {"run_with_gpu": [false, true]}, 
-                    "kwargs": {},
+                    "kwargs": {},   
                     "desc": "TTS - Bulk Transcribe Using Jupyter"
                 },
                 "add_voice": { 
@@ -103,6 +103,57 @@
                     "args": {"audio_path": "[input][file] Enter audios path..."}, 
                     "kwargs": {},
                     "desc": "Whisper - Speech To Text"
+                }
+            },
+            "operations": {
+                "logs":   {"type":"logs", "module":"get_logs", "args": {"task_id":null}},
+                "files":  {"type":"files", "module":"get_files", "args": {"task_id":null}},
+                "delete": {"type":"btn", "module":"delete_container_data", "args": {"task_id":null}}
+            }
+        },
+        "Youtube_Uploader": {
+            "module": "_backend.features.Youtube_Uploader.main",
+            "name": "Youtube Uploader - Upload Video To Youtube",
+            "icon": "youtube_uploader.png",
+            "class": "YOUTUBE_UPLOAD",
+            "methods": {
+                "add_youtube_account": { 
+                    "args": {
+                        "account_id" : "[input][str] Enter Unique Account ID...",
+                        "client_secrets": "[input][file] Client Secret File Path...",
+                        "Create_Secret_Key": "[a][https://www.youtube.com/watch?v=t9fF_wcjlLM] Youtube Video"
+                    }, 
+                    "kwargs": {}, 
+                    "desc": "Youtube - Add Account" 
+                },
+                "re_authenticate_youtube_account": { 
+                    "args": {
+                        "account_id" : "get_all_accounts",
+                        "authorization_code": "[input][str] Enter authorization code..."
+                    }, 
+                    "kwargs": {}, 
+                    "desc": "Re-Authenticate Account" 
+                },
+                "delete_account": {
+                    "args": { "account_id": "get_all_accounts" },
+                    "kwargs": {},
+                    "desc": "Delete Account"
+                },
+                "upload_video": { 
+                    "args": {
+                        "account_id" : "get_all_accounts",
+                        "videofile": "[input][file] Select Video To Upload...",
+                        "video_title": "[input][str] Enter Video title...",
+                        "description": "[input][str] Enter video description...",
+                        "thumbnail": "[input][file] Upload Video thumbnail...",
+                        "category": "get_youtube_categories",
+                        "keywords": "[input][str] Enter Keywords separeted by commas...",
+                        "privacyStatus": "get_privacy_statues"
+                    }, 
+                    "kwargs": {
+                        "playlistId": "[input][str] Enter playlist id [Optional]..."
+                    }, 
+                    "desc": "Youtube - Upload Video" 
                 }
             },
             "operations": {
